@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potluck Party Sign-up</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 0.5px solid #e0e0e0;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    h2 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: #1a1a1a;
+    }
+    
+    h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: #1a1a1a;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+    
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 0.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    input[type="text"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #378add;
+    }
+    
+    .category-hint {
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+    
+    #optionsContainer,
+    #customContainer {
+      display: none;
+    }
+    
+    .options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    input[type="radio"] {
+      cursor: pointer;
+    }
+    
+    input[type="radio"]:disabled {
+      cursor: not-allowed;
+    }
+    
+    input[type="radio"]:disabled + label {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #378add;
+      color: white;
+      border: 0.5px solid #378add;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #2d6db8;
+    }
+    
+    #message {
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+      color: #666;
+      display: none;
+    }
+    
+    .signups-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      border: 0.5px solid #e0e0e0;
+      padding: 1.5rem;
+    }
+    
+    .category-group {
+      margin-bottom: 1rem;
+    }
+    
+    .category-header {
+      font-weight: 500;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .signup-item {
+      background: white;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 0.5px solid #e0e0e0;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    
+    .signup-name {
+      font-weight: 500;
+    }
+    
+    .signup-dish {
+      color: #666;
+    }
+    
+    .no-signups {
+      font-size: 13px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Potluck party sign-up</h2>
+      
+      <div class="form-group">
+        <label>Your name</label>
+        <input type="text" id="name" placeholder="Enter your name">
+      </div>
+
+      <div class="form-group">
+        <label>Pick a category</label>
+        <select id="category">
+          <option value="">Select category...</option>
+          <option value="rice">1️⃣ Rice Dishes (3 slots)</option>
+          <option value="swallow">2️⃣ Swallow & Soups (3 slots)</option>
+          <option value="finger">3️⃣ Finger Foods (3 slots)</option>
+          <option value="protein">4️⃣ Proteins (3 slots)</option>
+          <option value="fastfood">5️⃣ Fast Food (3 slots)</option>
+          <option value="drinks">6️⃣ Drinks (Unlimited)</option>
+        </select>
+        <p class="category-hint" id="categoryHint"></p>
+      </div>
+
+      <div class="form-group" id="optionsContainer">
+        <label>What will you bring?</label>
+        <div class="options-group" id="optionsDropdown"></div>
+      </div>
+
+      <div class="form-group" id="customContainer">
+        <label>Describe your drink</label>
+        <input type="text" id="customDish" placeholder="e.g., Mango smoothie, Spiced cocktail...">
+      </div>
+
+      <button id="signupBtn">Sign me up</button>
+      <div id="message"></div>
+    </div>
+
+    <div class="signups-card">
+      <h3>Who's bringing what</h3>
+      <div id="signups"></div>
+    </div>
+  </div>
+
+  <script>
+    const categoryOptions = {
+      rice: ['Jollof Rice', 'Fried Rice', 'Native/Ofada Rice'],
+      swallow: ['Eba & Egusi soup', 'Fufu & Efo Riro', 'Pounded Yam & soup'],
+      finger: ['Small Chops', 'Gizdodo', 'Peppered Meat'],
+      protein: ['Grilled Chicken', 'Roasted Turkey', 'Peppered Beef'],
+      fastfood: ['Pizza', 'Burgers & Fries', 'Shawarma'],
+      drinks: null
+    };
+
+    const categoryLimits = {
+      rice: 3,
+      swallow: 3,
+      finger: 3,
+      protein: 3,
+      fastfood: 3,
+      drinks: Infinity
+    };
+
+    const categoryLabels = {
+      rice: '🍚 Rice Dishes',
+      swallow: '🥣 Swallow & Soups',
+      finger: '🍖 Finger Foods',
+      protein: '🍗 Proteins',
+      fastfood: '🍕 Fast Food',
+      drinks: '🥤 Drinks'
+    };
+
+    const categoryHints = {
+      rice: 'Jollof, Fried, Native/Ofada, etc. (6–8 people)',
+      swallow: 'Eba/Fufu/Pounded Yam + Egusi/Efo Riro (6–8 people)',
+      finger: 'Small chops, Gizdodo, Peppered meat (6–8 people)',
+      protein: 'Chicken, Turkey, Beef (10–12 people, grilled/fried/roasted)',
+      fastfood: 'Pizza, Burgers, Fries, Sharwama (6–8 people)',
+      drinks: 'Cocktails, mocktails, smoothies, punch (be creative!)'
+    };
+
+    const signups = {};
+    let selectedDish = '';
+
+    function countDish(cat, dish) {
+      return Object.values(signups).filter(s => s.category === cat && s.dish === dish).length;
+    }
+
+    function countInCategory(cat) {
+      return Object.values(signups).filter(s => s.category === cat).length;
+    }
+
+    function updateOptionsDisplay() {
+      const cat = document.getElementById('category').value;
+      if (!cat || cat === 'drinks') return;
+
+      const options = categoryOptions[cat];
+      const dropdown = document.getElementById('optionsDropdown');
+      dropdown.innerHTML = '';
+      
+      options.forEach(option => {
+        const count = countDish(cat, option);
+        const isFull = count >= 1;
+        
+        const radio = document.createElement('div');
+        radio.className = 'radio-item';
+        
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'dish';
+        input.value = option;
+        input.id = `dish_${option}`;
+        input.disabled = isFull;
+        
+        const label = document.createElement('label');
+        label.htmlFor = `dish_${option}`;
+        label.style.fontWeight = 'normal';
+        label.style.marginBottom = '0';
+        label.textContent = isFull ? `${option} (taken)` : option;
+        
+        radio.appendChild(input);
+        radio.appendChild(label);
+        dropdown.appendChild(radio);
+        
+        input.addEventListener('change', (e) => {
+          if (e.target.checked) selectedDish = e.target.value;
+        });
+      });
+    }
+
+    document.getElementById('category').addEventListener('change', (e) => {
+      const cat = e.target.value;
+      const hint = document.getElementById('categoryHint');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const customContainer = document.getElementById('customContainer');
+      
+      hint.textContent = categoryHints[cat] || '';
+      selectedDish = '';
+      
+      if (!cat) {
+        optionsContainer.style.display = 'none';
+        customContainer.style.display = 'none';
+        return;
+      }
+
+      if (cat === 'drinks') {
+        optionsContainer.style.display = 'none';
+        customContainer.style.display = 'block';
+        document.getElementById('customDish').placeholder = 'e.g., Mango smoothie, Spiced cocktail...';
+      } else {
+        optionsContainer.style.display = 'block';
+        customContainer.style.display = 'none';
+        updateOptionsDisplay();
+      }
+    });
+
+    function render() {
+      const container = document.getElementById('signups');
+      container.innerHTML = '';
+
+      const grouped = {};
+      Object.entries(signups).forEach(([id, signup]) => {
+        if (!grouped[signup.category]) grouped[signup.category] = [];
+        grouped[signup.category].push(signup);
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        container.innerHTML = '<p class="no-signups">No one signed up yet...</p>';
+        return;
+      }
+
+      Object.entries(grouped).forEach(([cat, items]) => {
+        const catDiv = document.createElement('div');
+        catDiv.className = 'category-group';
+        
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        const count = items.length;
+        const limit = categoryLimits[cat];
+        const limitText = limit === Infinity ? '∞' : limit;
+        header.textContent = `${categoryLabels[cat]} (${count}/${limitText})`;
+        catDiv.appendChild(header);
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'signup-item';
+          card.innerHTML = `<span class="signup-name">${item.name}</span><span class="signup-dish"> — ${item.dish}</span>`;
+          catDiv.appendChild(card);
+        });
+
+        container.appendChild(catDiv);
+      });
+
+      updateOptionsDisplay();
+    }
+
+    document.getElementById('signupBtn').addEventListener('click', () => {
+      const name = document.getElementById('name').value.trim();
+      const category = document.getElementById('category').value;
+      const message = document.getElementById('message');
+
+      if (!name) {
+        message.textContent = '🤔 Please enter your name';
+        message.style.display = 'block';
+        return;
+      }
+
+      if (!category) {
+        message.textContent = '🤔 Please pick a category';
+        message.style.display = 'block';
+        return;
+      }
+
+      let dish = selectedDish || document.getElementById('customDish').value.trim();
+      
+      if (!dish) {
+        message.textContent = '🤔 Please select or describe what you\'re bringing';
+        message.style.display = 'block';
+        return;
+      }
+
+      const count = countInCategory(category);
+      const limit = categoryLimits[category];
+      
+      if (count >= limit) {
+        message.textContent = `😅 ${categoryLabels[category]} is full! Pick another.`;
+        message.style.display = 'block';
+        return;
+      }
+
+      const id = Math.random().toString(36).slice(2);
+      signups[id] = { name, category, dish };
+      
+      message.textContent = '✅ You\'re in! Thanks for coming.';
+      message.style.display = 'block';
+      
+      document.getElementById('name').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('customDish').value = '';
+      document.querySelectorAll('input[name="dish"]').forEach(r => r.checked = false);
+      document.getElementById('categoryHint').textContent = '';
+      document.getElementById('optionsContainer').style.display = 'none';
+      document.getElementById('customContainer').style.display = 'none';
+      selectedDish = '';
+      
+      render();
+
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 2500);
+    });
+
+    render();
+  </script>
+</body>
+</html>
