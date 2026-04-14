@@ -58,6 +58,7 @@
     }
     
     input[type="text"],
+    input[type="tel"],
     select {
       width: 100%;
       padding: 8px 12px;
@@ -68,6 +69,7 @@
     }
     
     input[type="text"]:focus,
+    input[type="tel"]:focus,
     select:focus {
       outline: none;
       border-color: #378add;
@@ -126,6 +128,16 @@
     button:hover {
       background: #2d6db8;
     }
+
+    button.secondary {
+      background: #f0f0f0;
+      color: #1a1a1a;
+      border: 0.5px solid #e0e0e0;
+    }
+
+    button.secondary:hover {
+      background: #e0e0e0;
+    }
     
     #message {
       font-size: 13px;
@@ -166,6 +178,11 @@
       font-weight: 500;
     }
     
+    .signup-phone {
+      color: #999;
+      font-size: 12px;
+    }
+    
     .signup-dish {
       color: #666;
     }
@@ -173,6 +190,20 @@
     .no-signups {
       font-size: 13px;
       color: #999;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .button-group button {
+      flex: 1;
+    }
+
+    #formContainer {
+      display: none;
     }
   </style>
 </head>
@@ -183,13 +214,13 @@
       
       <div class="form-group" id="attendanceContainer">
         <label>Will you be attending?</label>
-        <div style="display: flex; gap: 12px; margin-top: 8px;">
-          <button type="button" id="yesBtn" style="flex: 1; padding: 10px; background: #378add; color: white; border: 0.5px solid #378add; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">Yes</button>
-          <button type="button" id="noBtn" style="flex: 1; padding: 10px; background: #f0f0f0; color: #1a1a1a; border: 0.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">No</button>
+        <div class="button-group">
+          <button type="button" id="yesBtn">Yes</button>
+          <button type="button" id="noBtn" class="secondary">No</button>
         </div>
       </div>
 
-      <div id="formContainer" style="display: none;">
+      <div id="formContainer">
       <div class="form-group">
         <label>Your name</label>
         <input type="text" id="name" placeholder="Enter your name">
@@ -235,20 +266,7 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      databaseURL: "https://potluck-adeola-default-rtdb.europe-west1.firebasedatabase.app/"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const signupsRef = db.ref('signups');
-
     const categoryOptions = {
       rice: ['Jollof Rice', 'Fried Rice', 'Native/Ofada Rice'],
       swallow: ['Eba & Egusi soup', 'Fufu & Efo Riro', 'Pounded Yam & soup'],
@@ -285,38 +303,13 @@
       drinks: 'Cocktails, mocktails, smoothies, punch (be creative!)'
     };
 
-    const signups = {};
+    // Load signups from localStorage
+    let signups = JSON.parse(localStorage.getItem('potluckSignups')) || {};
     let selectedDish = '';
 
-    // Load existing signups from Firebase on page load
-    signupsRef.on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        Object.assign(signups, data);
-        render();
-      }
-    });
-
-    // Attendance buttons
-    document.getElementById('yesBtn').addEventListener('click', () => {
-      document.getElementById('yesBtn').style.background = '#378add';
-      document.getElementById('yesBtn').style.color = 'white';
-      document.getElementById('noBtn').style.background = '#f0f0f0';
-      document.getElementById('noBtn').style.color = '#1a1a1a';
-      document.getElementById('attendanceContainer').style.display = 'none';
-      document.getElementById('formContainer').style.display = 'block';
-    });
-
-    document.getElementById('noBtn').addEventListener('click', () => {
-      document.getElementById('noBtn').style.background = '#378add';
-      document.getElementById('noBtn').style.color = 'white';
-      document.getElementById('yesBtn').style.background = '#f0f0f0';
-      document.getElementById('yesBtn').style.color = '#1a1a1a';
-      document.getElementById('attendanceContainer').style.display = 'none';
-      document.getElementById('formContainer').style.display = 'none';
-      document.getElementById('message').textContent = '😔 We\'ll miss you! Hope to see you next time.';
-      document.getElementById('message').style.display = 'block';
-    });
+    function saveSignups() {
+      localStorage.setItem('potluckSignups', JSON.stringify(signups));
+    }
 
     function countDish(cat, dish) {
       return Object.values(signups).filter(s => s.category === cat && s.dish === dish).length;
@@ -363,6 +356,19 @@
         });
       });
     }
+
+    // Attendance buttons
+    document.getElementById('yesBtn').addEventListener('click', () => {
+      document.getElementById('attendanceContainer').style.display = 'none';
+      document.getElementById('formContainer').style.display = 'block';
+    });
+
+    document.getElementById('noBtn').addEventListener('click', () => {
+      document.getElementById('attendanceContainer').style.display = 'none';
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('message').textContent = '😔 We\'ll miss you! Hope to see you next time.';
+      document.getElementById('message').style.display = 'block';
+    });
 
     document.getElementById('category').addEventListener('change', (e) => {
       const cat = e.target.value;
@@ -420,7 +426,7 @@
         items.forEach(item => {
           const card = document.createElement('div');
           card.className = 'signup-item';
-          card.innerHTML = `<span class="signup-name">${item.name}</span><span class="signup-dish"> — ${item.dish}</span>`;
+          card.innerHTML = `<span class="signup-name">${item.name}</span><span class="signup-phone"> • ${item.phone}</span><br/><span class="signup-dish">${item.dish}</span>`;
           catDiv.appendChild(card);
         });
 
@@ -472,16 +478,14 @@
       }
 
       const id = Math.random().toString(36).slice(2);
-      const newSignup = { name, phone, category, dish };
-      signups[id] = newSignup;
-      
-      // Save to Firebase
-      signupsRef.child(id).set(newSignup);
+      signups[id] = { name, phone, category, dish };
+      saveSignups();
       
       message.textContent = '✅ You\'re in! Thanks for coming.';
       message.style.display = 'block';
       
       document.getElementById('name').value = '';
+      document.getElementById('phone').value = '';
       document.getElementById('category').value = '';
       document.getElementById('customDish').value = '';
       document.querySelectorAll('input[name="dish"]').forEach(r => r.checked = false);
