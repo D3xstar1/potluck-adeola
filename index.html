@@ -235,7 +235,20 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  
   <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      databaseURL: "https://potluck-adeola-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const signupsRef = db.ref('signups');
+
     const categoryOptions = {
       rice: ['Jollof Rice', 'Fried Rice', 'Native/Ofada Rice'],
       swallow: ['Eba & Egusi soup', 'Fufu & Efo Riro', 'Pounded Yam & soup'],
@@ -274,6 +287,15 @@
 
     const signups = {};
     let selectedDish = '';
+
+    // Load existing signups from Firebase on page load
+    signupsRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        Object.assign(signups, data);
+        render();
+      }
+    });
 
     // Attendance buttons
     document.getElementById('yesBtn').addEventListener('click', () => {
@@ -450,7 +472,11 @@
       }
 
       const id = Math.random().toString(36).slice(2);
-      signups[id] = { name, phone, category, dish };
+      const newSignup = { name, phone, category, dish };
+      signups[id] = newSignup;
+      
+      // Save to Firebase
+      signupsRef.child(id).set(newSignup);
       
       message.textContent = '✅ You\'re in! Thanks for coming.';
       message.style.display = 'block';
